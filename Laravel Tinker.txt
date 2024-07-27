@@ -1,0 +1,92 @@
+Laravel Tinker is an interactive command-line tool that allows you to interact with your Laravel application directly. It provides a REPL (Read-Eval-Print Loop) environment where you can execute PHP code within the context of your application. This is useful for experimenting with your application, testing out new ideas, or debugging.
+
+### Installing Tinker
+Tinker is included with Laravel by default through the `laravel/tinker` package. If for some reason it's not installed, you can add it via Composer:
+```bash
+composer require laravel/tinker
+```
+
+### Using Tinker
+To start the Tinker console, run the following Artisan command:
+```bash
+php artisan tinker
+```
+
+### Common Uses of Tinker
+Here are some common tasks you can perform using Tinker:
+
+#### Interacting with Eloquent Models
+You can create, read, update, and delete records using your Eloquent models.
+
+**Creating a New Record:**
+```php
+$user = new App\Models\User;
+$user->name = 'John Doe';
+$user->email = 'john@example.com';
+$user->password = bcrypt('password');
+$user->save();
+```
+
+**Reading Records:**
+```php
+$users = App\Models\User::all();
+$user = App\Models\User::find(1);
+```
+
+**Updating a Record:**
+```php
+$user = App\Models\User::find(1);
+$user->name = 'Jane Doe';
+$user->save();
+```
+
+**Deleting a Record:**
+```php
+$user = App\Models\User::find(1);
+$user->delete();
+```
+
+#### Running Artisan Commands
+You can execute Artisan commands from within Tinker:
+```php
+Artisan::call('cache:clear');
+```
+
+#### Using Helpers and Facades
+You can use Laravel's helpers and facades:
+```php
+$encrypted = encrypt('secret');
+$decrypted = decrypt($encrypted);
+
+Log::info('This is a log message.');
+```
+
+#### Evaluating PHP Code
+You can evaluate arbitrary PHP code:
+```php
+echo "Hello, World!";
+```
+
+### Customizing Tinker
+You can customize Tinker by modifying the `tinker` configuration file, located at `config/tinker.php`. Here are some common customizations:
+
+#### Adding Custom Commands
+You can add custom Artisan commands to be available within Tinker:
+```php
+'commands' => [
+    App\Console\Commands\MyCustomCommand::class,
+],
+```
+
+#### Blacklisting Aliases
+You can prevent specific classes from being aliased within Tinker:
+```php
+'alias_blacklist' => [
+    App\Models\User::class,
+],
+```
+
+### Exiting Tinker
+To exit Tinker, type `exit` or press `Ctrl + D`.
+
+Laravel Tinker is a powerful tool that can help streamline your development and debugging workflow. It allows you to quickly test and interact with your application's code without needing to set up a web interface or create temporary scripts.

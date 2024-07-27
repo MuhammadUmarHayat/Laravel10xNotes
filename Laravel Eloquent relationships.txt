@@ -1,0 +1,317 @@
+ Eloquent supports several types of relationships, including one-to-one, one-to-many, many-to-many, and more.
+
+### 1. One-to-One Relationship
+
+A one-to-one relationship is a simple relation where one model is associated with one other model.
+
+#### Example: User and Profile
+
+**Migration for Users:**
+```php
+Schema::create('users', function (Blueprint $table) 
+{
+    $table->id();
+    $table->string('name');
+    $table->timestamps();
+});
+```
+
+**Migration for Profiles:**
+```php
+Schema::create('profiles', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('user_id');
+    $table->text('bio');
+    $table->timestamps();
+
+    $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+});
+```
+
+**User Model:**
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class User extends Model
+{
+    public function profile()
+    {
+        return $this->hasOne(Profile::class);
+    }
+}
+```
+
+**Profile Model:**
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Profile extends Model
+{
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}
+```
+
+**Usage:**
+```php
+// Retrieving the profile of a user
+$user = User::find(1);
+$profile = $user->profile;
+
+// Retrieving the user of a profile
+$profile = Profile::find(1);
+$user = $profile->user;
+```
+
+### 2. One-to-Many Relationship
+
+A one-to-many relationship is used when one model owns multiple instances of another model.
+
+#### Example: Post and Comment
+
+**Migration for Posts:**
+```php
+Schema::create('posts', function (Blueprint $table) {
+    $table->id();
+    $table->string('title');
+    $table->text('body');
+    $table->timestamps();
+});
+```
+
+**Migration for Comments:**
+```php
+Schema::create('comments', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('post_id');
+    $table->text('comment');
+    $table->timestamps();
+
+    $table->foreign('post_id')->references('id')->on('posts')->onDelete('cascade');
+});
+```
+
+**Post Model:**
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Post extends Model
+{
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+}
+```
+
+**Comment Model:**
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Comment extends Model
+{
+    public function post()
+    {
+        return $this->belongsTo(Post::class);
+    }
+}
+```
+
+**Usage:**
+```php
+// Retrieving comments of a post
+$post = Post::find(1);
+$comments = $post->comments;
+
+// Adding a comment to a post
+$post = Post::find(1);
+$post->comments()->create(['comment' => 'This is a comment.']);
+```
+
+### 3. Many-to-Many Relationship
+
+A many-to-many relationship is used when one model is associated with multiple instances of another model and vice versa.
+
+#### Example: User and Role
+
+**Migration for Roles:**
+```php
+Schema::create('roles', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->timestamps();
+});
+```
+
+**Migration for Role_User Pivot Table:**
+```php
+Schema::create('role_user', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('user_id');
+    $table->unsignedBigInteger('role_id');
+    $table->timestamps();
+
+    $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+    $table->foreign('role_id')->references('id')->on('roles')->onDelete('cascade');
+});
+```
+
+**User Model:**
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class User extends Model
+{
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class);
+    }
+}
+```
+
+**Role Model:**
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Role extends Model
+{
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
+    }
+}
+```
+
+**Usage:**
+```php
+// Attaching a role to a user
+$user = User::find(1);
+$user->roles()->attach(1);
+
+// Detaching a role from a user
+$user->roles()->detach(1);
+
+// Syncing roles
+$user->roles()->sync([1, 2, 3]);
+
+// Retrieving roles of a user
+$user = User::find(1);
+$roles = $user->roles;
+
+// Retrieving users of a role
+$role = Role::find(1);
+$users = $role->users;
+```
+
+### 4. Has Many Through Relationship
+
+A "has many through" relationship provides a convenient shortcut for accessing distant relations via an intermediate relation.
+
+#### Example: Country, User, and Post
+
+**Migration for Countries:**
+```php
+Schema::create('countries', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->timestamps();
+});
+```
+
+**Migration for Users:**
+```php
+Schema::create('users', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('country_id');
+    $table->string('name');
+    $table->timestamps();
+
+    $table->foreign('country_id')->references('id')->on('countries')->onDelete('cascade');
+});
+```
+
+**Migration for Posts:**
+```php
+Schema::create('posts', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('user_id');
+    $table->string('title');
+    $table->text('body');
+    $table->timestamps();
+
+    $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+});
+```
+
+**Country Model:**
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Country extends Model
+{
+    public function posts()
+    {
+        return $this->hasManyThrough(Post::class, User::class);
+    }
+}
+```
+
+**User Model:**
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class User extends Model
+{
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+}
+```
+
+**Post Model:**
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Post extends Model
+{
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}
+```
+
+**Usage:**
+```php
+// Retrieving posts of a country
+$country = Country::find(1);
+$posts = $country->posts;
+```
+
+### Conclusion
+
+These examples cover the most common types of relationships in Laravel Eloquent.
+ Understanding and using these relationships effectively can greatly simplify your database interactions and improve the structure of your application.
+
+Feel free to ask if you have more specific use cases or need further explanations!

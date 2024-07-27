@@ -1,0 +1,315 @@
+Certainly! Here's a comprehensive tutorial on Laravel's ORM (Eloquent):
+
+## Introduction to Eloquent ORM
+
+Eloquent ORM (Object-Relational Mapping) is Laravel's built-in ORM that makes database operations easy and intuitive by mapping database tables to corresponding models in your application.
+
+### Setting Up
+
+1. **Install Laravel**: If you haven't installed Laravel yet, you can do so via Composer:
+   ```bash
+   composer create-project --prefer-dist laravel/laravel myproject
+   ```
+2. **Configure Database**: Set up your database connection in the `.env` file:
+   ```plaintext
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=your_database
+   DB_USERNAME=your_username
+   DB_PASSWORD=your_password
+   ```
+
+### Creating a Model and Migration
+
+Eloquent models represent database tables. To create a model along with a migration file, run:
+```bash
+php artisan make:model Product -m
+```
+This command generates a `Product` model and a migration file in the `database/migrations` directory.
+
+### Defining the Migration
+
+Open the generated migration file and define the table structure:
+```php
+public function up()
+{
+    Schema::create('products', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->text('description');
+        $table->decimal('price', 8, 2);
+        $table->timestamps();
+    });
+}
+```
+Run the migration to create the table:
+```bash
+php artisan migrate
+```
+
+### Defining the Model
+
+Eloquent models are located in the `app/Models` directory. Open the `Product` model:
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Product extends Model
+{
+    use HasFactory;
+
+    protected $fillable = ['name', 'description', 'price'];
+}
+```
+The `$fillable` property specifies which attributes should be mass-assignable.
+
+### Basic CRUD Operations
+
+#### Creating a Record
+
+```php
+use App\Models\Product;
+
+$product = new Product();
+$product->name = 'Sample Product';
+$product->description = 'This is a sample product';
+$product->price = 99.99;
+$product->save();
+
+// Or using mass assignment
+Product::create([
+    'name' => 'Another Product',
+    'description' => 'Description of another product',
+    'price' => 49.99,
+]);
+```
+
+#### Reading Records
+
+```php
+// Retrieve all products
+$products = Product::all();
+
+// Retrieve a product by its primary key
+$product = Product::find(1);
+
+// Retrieve a product by a specific column
+$product = Product::where('name', 'Sample Product')->first();
+```
+
+#### Updating Records
+
+```php
+$product = Product::find(1);
+$product->name = 'Updated Product Name';
+$product->save();
+
+// Or using mass assignment
+Product::where('id', 1)->update(['name' => 'Updated Product Name']);
+```
+
+#### Deleting Records
+
+```php
+$product = Product::find(1);
+$product->delete();
+
+// Or using a query
+Product::destroy(1);
+
+// Deleting multiple records
+Product::where('price', '<', 50)->delete();
+```
+
+### Eloquent Relationships
+
+#### One-to-One
+
+```php
+// Define the relationship in the models
+class User extends Model
+{
+    public function profile()
+    {
+        return $this->hasOne(Profile::class);
+    }
+}
+
+class Profile extends Model
+{
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}
+
+// Usage
+$user = User::find(1);
+$profile = $user->profile;
+```
+
+#### One-to-Many
+
+```php
+// Define the relationship in the models
+class Post extends Model
+{
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+}
+
+class Comment extends Model
+{
+    public function post()
+    {
+        return $this->belongsTo(Post::class);
+    }
+}
+
+// Usage
+$post = Post::find(1);
+$comments = $post->comments;
+```
+
+#### Many-to-Many
+
+```php
+// Define the relationship in the models
+class User extends Model
+{
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class);
+    }
+}
+
+class Role extends Model
+{
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
+    }
+}
+
+// Usage
+$user = User::find(1);
+$roles = $user->roles;
+```
+
+#### Has Many Through
+
+```php
+// Define the relationship in the models
+class Country extends Model
+{
+    public function posts()
+    {
+        return $this->hasManyThrough(Post::class, User::class);
+    }
+}
+
+class User extends Model
+{
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+}
+
+class Post extends Model
+{
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}
+
+// Usage
+$country = Country::find(1);
+$posts = $country->posts;
+```
+
+### Eager Loading
+
+To reduce the number of queries, use eager loading:
+
+```php
+$users = User::with('profile')->get();
+foreach ($users as $user) {
+    echo $user->profile->bio;
+}
+```
+
+### Query Scopes
+
+Defining a scope:
+
+```php
+class Product extends Model
+{
+    public function scopePopular($query)
+    {
+        return $query->where('views', '>', 100);
+    }
+
+    public function scopeCheap($query)
+    {
+        return $query->where('price', '<', 50);
+    }
+}
+
+// Usage
+$popularProducts = Product::popular()->get();
+$cheapProducts = Product::cheap()->get();
+$popularAndCheapProducts = Product::popular()->cheap()->get();
+```
+
+### Soft Deletes
+
+Enable soft deletes in the model:
+
+```php
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Product extends Model
+{
+    use SoftDeletes;
+}
+
+// Add the `deleted_at` column in the migration
+$table->softDeletes();
+```
+
+Soft-deleting a record:
+
+```php
+$product = Product::find(1);
+$product->delete();
+
+// Retrieving only non-deleted records
+$products = Product::all();
+
+// Retrieving all records, including soft-deleted
+$allProducts = Product::withTrashed()->get();
+
+// Retrieving only soft-deleted records
+$trashedProducts = Product::onlyTrashed()->get();
+
+// Restoring a soft-deleted record
+$product->restore();
+
+// Permanently deleting a soft-deleted record
+$product->forceDelete();
+```
+
+### Conclusion
+
+Eloquent ORM is a powerful tool in Laravel that simplifies database interactions.
+ By using models, relationships, scopes, and other features, you can efficiently manage your database operations.
+
+Feel free to ask if you have any specific questions or need further details on any part of this tutorial!
