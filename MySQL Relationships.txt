@@ -1,0 +1,170 @@
+Creating a relational database in MySQL involves defining tables and establishing relationships between them using primary keys, foreign keys, and other constraints. Here’s a comprehensive example covering one-to-one, one-to-many, and many-to-many relationships, as well as table inheritance.
+
+### 1. One-to-One Relationship
+
+A one-to-one relationship means that a row in one table is linked to exactly one row in another table. 
+
+#### Example:
+Let's consider `Users` and `Profiles`. Each user has one profile, and each profile belongs to one user.
+
+```sql
+CREATE TABLE Users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Profiles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    bio TEXT,
+    profile_picture VARCHAR(255),
+    FOREIGN KEY (user_id) REFERENCES Users(id)
+);
+```
+
+### 2. One-to-Many Relationship
+
+A one-to-many relationship means that a row in one table can be linked to multiple rows in another table.
+
+#### Example:
+Let's consider `Authors` and `Books`. Each author can write multiple books, but each book is written by one author.
+
+```sql
+CREATE TABLE Authors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Books (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    author_id INT NOT NULL,
+    FOREIGN KEY (author_id) REFERENCES Authors(id)
+);
+```
+
+### 3. Many-to-Many Relationship
+
+A many-to-many relationship means that multiple rows in one table can be linked to multiple rows in another table. This is usually implemented using a junction table.
+
+#### Example:
+Let's consider `Students` and `Courses`. Each student can enroll in multiple courses, and each course can have multiple students.
+
+```sql
+CREATE TABLE Students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Courses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Enrollments (
+    student_id INT NOT NULL,
+    course_id INT NOT NULL,
+    enrollment_date DATE,
+    PRIMARY KEY (student_id, course_id),
+    FOREIGN KEY (student_id) REFERENCES Students(id),
+    FOREIGN KEY (course_id) REFERENCES Courses(id)
+);
+```
+
+### 4. Table Inheritance (Using Single Table Inheritance)
+
+Table inheritance is not directly supported in MySQL, but you can simulate it using various techniques. One common method is Single Table Inheritance, where a single table holds records for multiple types and a type column distinguishes between them.
+
+#### Example:
+Let's consider `Vehicles` with `Cars` and `Trucks` as subtypes.
+
+```sql
+CREATE TABLE Vehicles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    type VARCHAR(50) NOT NULL,
+    make VARCHAR(50) NOT NULL,
+    model VARCHAR(50) NOT NULL,
+    year INT,
+    -- Car specific fields
+    seating_capacity INT,
+    -- Truck specific fields
+    payload_capacity INT
+);
+```
+
+In this table, the `type` column could have values like 'car' or 'truck', and the other fields can be used according to the type. For instance, `seating_capacity` would be relevant for cars, and `payload_capacity` for trucks.
+
+### Putting It All Together
+
+Here’s the complete SQL to create these tables and relationships:
+
+```sql
+-- One-to-One Relationship
+CREATE TABLE Users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Profiles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    bio TEXT,
+    profile_picture VARCHAR(255),
+    FOREIGN KEY (user_id) REFERENCES Users(id)
+);
+
+-- One-to-Many Relationship
+CREATE TABLE Authors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Books (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    author_id INT NOT NULL,
+    FOREIGN KEY (author_id) REFERENCES Authors(id)
+);
+
+-- Many-to-Many Relationship
+CREATE TABLE Students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Courses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Enrollments (
+    student_id INT NOT NULL,
+    course_id INT NOT NULL,
+    enrollment_date DATE,
+    PRIMARY KEY (student_id, course_id),
+    FOREIGN KEY (student_id) REFERENCES Students(id),
+    FOREIGN KEY (course_id) REFERENCES Courses(id)
+);
+
+-- Table Inheritance (Single Table Inheritance)
+CREATE TABLE Vehicles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    type VARCHAR(50) NOT NULL,
+    make VARCHAR(50) NOT NULL,
+    model VARCHAR(50) NOT NULL,
+    year INT,
+    seating_capacity INT,
+    payload_capacity INT
+);
+```
+
+### Summary
+
+- **One-to-One Relationship**: Users and Profiles, linked by `user_id`.
+- **One-to-Many Relationship**: Authors and Books, linked by `author_id`.
+- **Many-to-Many Relationship**: Students and Courses, linked via Enrollments.
+- **Table Inheritance**: Vehicles with subtypes Cars and Trucks distinguished by the `type` column.
+
+These examples cover the fundamental ways to establish relationships and inheritance in a MySQL relational database.

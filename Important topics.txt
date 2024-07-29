@@ -1,0 +1,19 @@
+-Resource Classes
+-Middlewares (before and after)
+-Providers and Containers
+-Collections
+-Abstract Classes
+-Traits
+-Interface
+-Contracts
+-Laravel9 Vs Laravel10
+-MySql Features 
+-Statemanagement in Laravel
+-Cache
+-Array and its types
+-Helper Functions in Laravel
+-API
+-Throtling or rate limiting
+-Custom Request
+-Mutator and Accessers
+
