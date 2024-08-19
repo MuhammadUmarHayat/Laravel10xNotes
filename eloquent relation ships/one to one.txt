@@ -1,0 +1,28 @@
+usefule function:
+1.Associates a related model to the current model without saving it.
+
+$user = User::find(1);
+$profile = new Profile(['bio' => 'Web Developer', 'avatar' => 'john.jpg']);
+$profile->user()->associate($user);
+$profile->save();
+
+2.dissociate()
+$profile = Profile::find(1);
+$profile->user()->dissociate();
+$profile->save();
+
+3.save()//Saves a related model instance.
+
+$user = User::find(1);
+$profile = new Profile(['bio' => 'Web Developer', 'avatar' => 'john.jpg']);
+$user->profile()->save($profile);
+
+4.create() //Creates a new related model instance and associates it with the parent model.
+$user = User::find(1);
+$profile = $user->profile()->create(['bio' => 'Web Developer', 'avatar' => 'john.jpg']);
+5. firstOrCreate()//Retrieves the first related model matching the attributes or creates it if it doesn’t exist.
+$user = User::find(1);
+$profile = $user->profile()->firstOrCreate(['bio' => 'Web Developer'], ['avatar' => 'john.jpg']);
+6.updateOrCreate()
+Updates an existing model or creates a new one based on the condition
+

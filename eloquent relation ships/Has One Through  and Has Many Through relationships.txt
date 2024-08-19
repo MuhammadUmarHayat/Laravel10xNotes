@@ -1,0 +1,198 @@
+In Laravel, **Has One Through** and **Has Many Through** relationships are used
+ when you want to retrieve data from one model that is related to another model through an intermediate model.
+
+### **1. Has One Through Relationship**
+
+A **Has One Through** relationship is used when a model is related to another model through a single intermediate model. For example, if each `Supplier` has one `Country`, and each `User` belongs to one `Supplier`, you might want to get the `Country` of a `User` directly.
+
+#### **Example Scenario:**
+
+- **User** -> belongs to a **Supplier**
+- **Supplier** -> belongs to a **Country**
+- **User** -> has one **Country** through **Supplier**
+
+#### **Migration Example:**
+
+```php
+// countries table migration
+Schema::create('countries', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->timestamps();
+});
+
+// suppliers table migration
+Schema::create('suppliers', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('country_id');
+    $table->string('name');
+    $table->timestamps();
+
+    $table->foreign('country_id')->references('id')->on('countries')->onDelete('cascade');
+});
+
+// users table migration
+Schema::create('users', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('supplier_id');
+    $table->string('name');
+    $table->string('email')->unique();
+    $table->timestamps();
+
+    $table->foreign('supplier_id')->references('id')->on('suppliers')->onDelete('cascade');
+});
+```
+
+#### **Model Setup:**
+
+- **User.php:**
+
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class User extends Model
+{
+    public function country()
+    {
+        return $this->hasOneThrough(Country::class, Supplier::class, 'id', 'id', 'supplier_id', 'country_id');
+    }
+}
+```
+
+- **Supplier.php**:
+
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Supplier extends Model
+{
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
+}
+```
+
+- **Country.php**:
+
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Country extends Model
+{
+    public function suppliers()
+    {
+        return $this->hasMany(Supplier::class);
+    }
+}
+```
+
+#### **Usage Example:**
+
+- **Accessing the Country of a User:**
+
+```php
+$user = User::find(1);
+$country = $user->country;
+echo $country->name;
+```
+
+### **2. Has Many Through Relationship**
+
+A **Has Many Through** relationship is used when a model is related to many other models through an intermediate model. For example, if a `Country` has many `Users` through `Suppliers`, you can use a Has Many Through relationship.
+
+#### **Example Scenario:**
+
+- **Country** -> has many **Suppliers**
+- **Supplier** -> has many **Users**
+- **Country** -> has many **Users** through **Suppliers**
+
+#### **Model Setup:**
+
+- **Country.php:**
+
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Country extends Model
+{
+    public function users()
+    {
+        return $this->hasManyThrough(User::class, Supplier::class);
+    }
+}
+```
+
+#### **Usage Example:**
+
+- **Accessing Users of a Country:**
+
+```php
+$country = Country::find(1);
+$users = $country->users;
+
+foreach ($users as $user) {
+    echo $user->name;
+}
+```
+
+### **Summary of Useful Functions:**
+
+#### 1. **`hasOneThrough()`**
+- Used to define a "has one through" relationship.
+- Syntax: 
+    ```php
+    public function relationshipMethod()
+    {
+        return $this->hasOneThrough(FinalModel::class, IntermediateModel::class, 'foreignKeyOnIntermediate', 'foreignKeyOnFinal', 'localKeyOnThisModel', 'localKeyOnIntermediateModel');
+    }
+    ```
+
+#### 2. **`hasManyThrough()`**
+- Used to define a "has many through" relationship.
+- Syntax: 
+    ```php
+    public function relationshipMethod()
+    {
+        return $this->hasManyThrough(FinalModel::class, IntermediateModel::class);
+    }
+    ```
+
+#### 3. **Eager Loading**
+- **`with()`**: Used to eager load relationships to avoid N+1 query problems.
+    ```php
+    $countries = Country::with('users')->get();
+    ```
+
+#### 4. **Querying Related Models**
+- **`whereHas()`**: Filter the parent model based on conditions in the related model.
+    ```php
+    $countries = Country::whereHas('users', function ($query) {
+        $query->where('email', 'like', '%example.com');
+    })->get();
+    ```
+
+- **`withCount()`**: Count the number of related models.
+    ```php
+    $countries = Country::withCount('users')->get();
+    ```
+
+### **Summary**
+
+- **Has One Through** is useful when you need to access a single related model through an intermediate relationship.
+- **Has Many Through** is useful when you need to access multiple related models through an intermediate relationship.
+
+These relationship types help to simplify and organize complex queries, making your code more readable and efficient.

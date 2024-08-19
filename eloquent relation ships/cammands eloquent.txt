@@ -1,0 +1,53 @@
+cd C:\xampp\htdocs
+composer create-project laravel/laravel laravel_eloquent_example "10.*"
+cd laravel_eloquent_example
+
+Laravel Eloquent  One to One relationship with suitable example and useful functions
+User has one Profile
+php artisan make:migration create_users_table
+php artisan make:migration create_profiles_table
+php artisan migrate
+php artisan make:model User
+php artisan make:model Profile
+
+php artisan tinker
+*************************one to one relation ship ************************************
+// Create a new user
+$user = User::create(['name' => 'John Doe', 'email' => 'john@example.com']);
+// Create a new profile and associate it with the user
+$profile = new App\Models\Profile(['bio' => 'Web Developer', 'avatar' => 'john.jpg']);
+
+$user->profile()->save($profile);
+
+// Find the user
+$user = User::find(1);
+// Access the user's profile
+$profile = $user->profile;
+echo $profile->bio;  // Outputs: Web Developer
+
+// Find the profile
+$profile = App\Models\Profile::find(1);
+// Access the associated user
+$user = $profile->user;
+echo $user->name;  // Outputs: John Doe
+echo $user->profile->bio;
+
+
+// Find the user's profile and update it
+$profile = $user->profile;
+$profile->bio = 'Senior Web Developer';
+$profile->save();
+//update user
+$user = User::find(1);
+$user->name='Ali';
+$user->save();
+// Dissociate the profile from the user
+$profile->user()->dissociate();
+$profile->save();
+
+// Deleting the user will also delete the associated profile because of the onDelete('cascade') rule
+$user = User::find(1);
+$user->delete();
+
+exist();
+**************************************************************************************
